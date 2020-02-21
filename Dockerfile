@@ -1,4 +1,4 @@
-FROM adoptopenjdk/openjdk11
+FROM openjdk:8u171-jdk
 
 # Default payara ports to expose
 # 4848: admin console
