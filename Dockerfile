@@ -1,4 +1,4 @@
-FROM openjdk:jdk11u
+FROM openjdk:jdk-11.0.7-ga
 
 # Default payara ports to expose
 # 4848: admin console
