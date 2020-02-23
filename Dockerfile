@@ -1,70 +1,59 @@
-FROM openjdk:8u171-jdk
+# ------------------------------------------------------------------------------
+#               NOTE: THIS DOCKERFILE IS GENERATED VIA "build_latest.sh" or "update_multiarch.sh"
+#
+#                       PLEASE DO NOT EDIT IT DIRECTLY.
+# ------------------------------------------------------------------------------
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
 
-# Default payara ports to expose
-# 4848: admin console
-# 9009: debug port (JPDA)
-# 8080: http
-# 8181: https
-EXPOSE 4848 9009 8080 8181
+FROM centos:7
 
-# Initialize the configurable environment variables
-ENV HOME_DIR=/opt/payara\
-    PAYARA_DIR=/opt/payara/appserver\
-    SCRIPT_DIR=/opt/payara/scripts\
-    CONFIG_DIR=/opt/payara/config\
-    DEPLOY_DIR=/opt/payara/deployments\
-    PASSWORD_FILE=/opt/payara/passwordFile\
-    # Payara version (5.183+)
-    PAYARA_VERSION=5.183\
-    # Payara Server Domain options
-    DOMAIN_NAME=production\
-    ADMIN_USER=admin\
-    ADMIN_PASSWORD=admin \
-    # Utility environment variables
-    JVM_ARGS=\
-    DEPLOY_PROPS=\
-    POSTBOOT_COMMANDS=/opt/payara/config/post-boot-commands.asadmin\
-    PREBOOT_COMMANDS=/opt/payara/config/pre-boot-commands.asadmin
+ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
-# Create and set the Payara user and working directory owned by the new user
-RUN groupadd payara && \
-    useradd -b ${HOME_DIR} -M -s /bin/bash -d ${HOME_DIR} payara -g payara && \
-    echo payara:payara | chpasswd && \
-    mkdir -p ${DEPLOY_DIR} && \
-    mkdir -p ${CONFIG_DIR} && \
-    mkdir -p ${SCRIPT_DIR} && \
-    chown -R payara:payara ${HOME_DIR}
-USER payara
-WORKDIR ${HOME_DIR}
+RUN yum install -y openssl curl ca-certificates fontconfig gzip tar \
+    && yum update; yum clean all
 
-# Download and unzip the Payara distribution
-RUN wget --no-verbose -O payara.zip https://s3-eu-west-1.amazonaws.com/payara.fish/payara-prerelease.zip 
-RUN    chown payara:payara payara.zip 
-RUN    unzip -qq payara.zip -d ./ 
-RUN    mv payara*/ appserver 
-    # Configure the password file for configuring Payara
-RUN    echo "AS_ADMIN_PASSWORD=\nAS_ADMIN_NEWPASSWORD=${ADMIN_PASSWORD}" > /tmp/tmpfile 	
-RUN    echo "AS_ADMIN_PASSWORD=${ADMIN_PASSWORD}" >> ${PASSWORD_FILE} 
-    # Configure the payara domain
-RUN    ${PAYARA_DIR}/bin/asadmin --user ${ADMIN_USER} --passwordfile=/tmp/tmpfile change-admin-password --domain_name=${DOMAIN_NAME} 
-RUN    ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} start-domain ${DOMAIN_NAME} 
-RUN    ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} enable-secure-admin 
-RUN    for MEMORY_JVM_OPTION in $(${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} list-jvm-options | grep "Xm[sx]"); do\
-        ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} delete-jvm-options $MEMORY_JVM_OPTION;\
-    done 
-RUN    ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} create-jvm-options '-XX\:+UnlockExperimentalVMOptions:-XX\:+UseCGroupMemoryLimitForHeap' 
-RUN    ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} set-log-attributes com.sun.enterprise.server.logging.GFFileHandler.logtoFile=false 
-RUN    ${PAYARA_DIR}/bin/asadmin --user=${ADMIN_USER} --passwordfile=${PASSWORD_FILE} stop-domain ${DOMAIN_NAME} 
-    # Cleanup unused files
-RUN    rm -rf \
-        /tmp/tmpFile \
-        payara.zip \
-        ${PAYARA_DIR}/glassfish/domains/${DOMAIN_NAME}/osgi-cache \
-        ${PAYARA_DIR}/glassfish/domains/${DOMAIN_NAME}/logs \
-        ${PAYARA_DIR}/glassfish/domains/domain1
+ENV JAVA_VERSION jdk-11.0.6+10_openj9-0.18.1
 
-# Copy across docker scripts
-COPY --chown=payara:payara bin/*.sh ${SCRIPT_DIR}/
-RUN chmod +x ${SCRIPT_DIR}/*
+RUN set -eux; \
+    ARCH="$(uname -m)"; \
+    case "${ARCH}" in \
+       ppc64el|ppc64le) \
+         ESUM='942436d908aea973a661df080e32ea88a3819b4d50b95d502c140fb0a0e43fdb'; \
+         BINARY_URL='https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.6%2B10_openj9-0.18.1/OpenJDK11U-jdk_ppc64le_linux_openj9_11.0.6_10_openj9-0.18.1.tar.gz'; \
+         ;; \
+       s390x) \
+         ESUM='a255f620a971f4f537b729d53b4ad6433cb579ce3f929a19b572cfcdacb6ec93'; \
+         BINARY_URL='https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.6%2B10_openj9-0.18.1/OpenJDK11U-jdk_s390x_linux_openj9_11.0.6_10_openj9-0.18.1.tar.gz'; \
+         ;; \
+       amd64|x86_64) \
+         ESUM='1530172ee98edd129954fcdca1bf725f7b30c8bfc3cdc381c88de96b7d19e690'; \
+         BINARY_URL='https://github.com/AdoptOpenJDK/openjdk11-binaries/releases/download/jdk-11.0.6%2B10_openj9-0.18.1/OpenJDK11U-jdk_x64_linux_openj9_11.0.6_10_openj9-0.18.1.tar.gz'; \
+         ;; \
+       *) \
+         echo "Unsupported arch: ${ARCH}"; \
+         exit 1; \
+         ;; \
+    esac; \
+    curl -LfsSo /tmp/openjdk.tar.gz ${BINARY_URL}; \
+    echo "${ESUM} */tmp/openjdk.tar.gz" | sha256sum -c -; \
+    mkdir -p /opt/java/openjdk; \
+    cd /opt/java/openjdk; \
+    tar -xf /tmp/openjdk.tar.gz --strip-components=1; \
+    rm -rf /tmp/openjdk.tar.gz;
 
-CMD ${SCRIPT_DIR}/generate_deploy_commands.sh && exec ${SCRIPT_DIR}/startInForeground.sh
+ENV JAVA_HOME=/opt/java/openjdk \
+    PATH="/opt/java/openjdk/bin:$PATH"
+ENV JAVA_TOOL_OPTIONS="-XX:+IgnoreUnrecognizedVMOptions -XX:+UseContainerSupport -XX:+IdleTuningCompactOnIdle -XX:+IdleTuningGcOnIdle"
+CMD ["jshell"]
