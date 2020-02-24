@@ -1,0 +1,34 @@
+apiVersion: build.openshift.io/v1
+kind: BuildConfig
+metadata:
+  creationTimestamp: '2020-02-23T11:44:43Z'
+  labels:
+    app: dockerfilebuildsample1
+  name: dockerfilebuildsample
+  namespace: cicd
+  resourceVersion: '6193'
+  selfLink: >-
+    /apis/build.openshift.io/v1/namespaces/cicd/buildconfigs/dockerfilebuildsample
+  uid: e1fc49de-5631-11ea-a79c-fc4596a15333
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: ImageStreamTag
+      name: 'dockerfilebuildsample:latest'
+  postCommit: {}
+  resources: {}
+  runPolicy: Serial
+  source:
+    git:
+      uri: 'https://github.com/zqxbest/cicd3.git'
+    type: Git
+  strategy:
+    dockerStrategy:
+      from:
+        kind: ImageStreamTag
+        name: 'centos:7'
+    type: Docker
+  triggers: []
+status:
+  lastVersion: 1
