@@ -1,0 +1,36 @@
+https://medium.com/@maheshacharya_44641/install-openshift-origin-on-ubuntu-18-04-7b98773c2ee6
+
+sudo apt-get install docker-ce=5:19.03.6~3-0~ubuntu-bionic docker-ce-cli=5:19.03.6~3-0~ubuntu-bionic containerd.io
+
+oc cluster up 
+
+root@zhao-Aspire-VX5-591G:~# oc cluster up
+WARNING: Binding DNS on port 8053 instead of 53, which may not be resolvable from all clients.
+Using Docker shared volumes for OpenShift volumes
+Using 127.0.0.1 as the server IP
+Starting OpenShift using openshift/origin:v3.9.0 ...
+OpenShift server started.
+
+The server is accessible via web console at:
+    https://127.0.0.1:8443
+
+You are logged in as:
+    User:     developer
+    Password: <any value>
+
+To login as administrator:
+    oc login -u system:admin
+
+
+
+https://github.com/rht-labs/owasp-zap-openshift
+
+
+
+docker file build
+
+dockerfile里面的from会替换buildconfig里的 imagestream
+
+dockerhub image 要 oc import-image 到 imagestream
+
+build output imagestream 要 新建 buildstream 建立tag
